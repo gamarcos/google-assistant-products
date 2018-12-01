@@ -1,4 +1,4 @@
-const config = require('./config/config');
+const config = require('../config/config');
 const requestAPI = require('request-promise')
 
 require('dotenv').config()
