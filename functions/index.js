@@ -178,7 +178,7 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                 title: product.name,
                 buttons: new Button({
                     title: 'Read more',
-                    url: 'http://rede.natura.net',
+                    url: 'http://rede.natura.net'+product.productsVariants[0]._links.productUrl.href,
                 }),
                 image: new Image({
                     url: 'http://rede.natura.net' + product.productsVariants[0].media[0].url,
