@@ -41,7 +41,7 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
 
     if (conv !== null && conv.data.productsNumber === undefined) {
         conv.data.productsNumber = 0;
-    }
+    } 
 
     const hasScreen = conv !== null && conv.surface.capabilities.has('actions.capability.SCREEN_OUTPUT');
     const hasAudio = conv !== null && conv.surface.capabilities.has('actions.capability.AUDIO_OUTPUT');
@@ -120,14 +120,22 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
         if (conv.data.products.length === 0) {
             const products = await service.searchProductsRequest(productName, page)
             saveProductsFound(products)
-            return buildProductsFound()
+            console.log('Quantidade de PRodutos: ' + products.products.length)
+            if (products.products.length === 1) {
+                return buildSingleProduct()
+            } else {
+                return buildProductsFound()
+            }
+            
         } else {
             return buildProductsFound()
         }
     }
 
     async function selectedItemByNumber(agent) {
+        console.log('Produto Selecionado: ' + conv.data.productsNumber)
         if (checkIfGoogle(agent)) {
+            console.log('Produto Selecionado: ' + conv.data.productsNumber)
             let option = agent.contexts.find(function (obj) {
                 return obj.name === 'actions_intent_option'
             })
@@ -135,7 +143,6 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                 conv.data.productsNumber = parseInt(option.parameters.OPTION.replace('product ', ''));
             }
             console.log('Produto Selecionado: ' + conv.data.productsNumber)
-            console.log('Produto encontrado: '+ conv.data.productsFound.length)
             let response = await displayCard();
             agent.add(response);
         }
@@ -148,6 +155,45 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
         } else {
             return buildSingleCards();
         }
+    }
+
+    function buildSingleProduct() {
+        console.log('Single Card Products' + conv.data.products.products[0])
+        let responseToUser;
+        if (conv.data.products.products.length === 0 ) {
+            responseToUser = 'No products on promotions available at this time!';
+            conv.close(responseToUser)
+        } 
+        let product = conv.data.products.products[0];
+        responseToUser += ' Write or say next meetup to see more.';
+
+        if ( hasAudio ) {
+            let ssmlText = '<speak>' +
+                ' Is ' + product.friendlyName + '. <break time="1" />' +
+                ' By ' + product.tagline + '. <break time="1" />' +
+                '<break time="600ms" />For more visit website. <break time="800ms" />' +
+                '</speak>';
+            conv.ask(ssmlText.replace('&', ' and '));
+        } else {
+            conv.ask(responseToUser);
+        }
+        if (hasScreen) {
+            conv.ask(new BasicCard({
+                text: product.tagline,
+                subtitle: 'This is a subtitle',
+                title: product.friendlyName,
+                buttons: new Button({
+                    title: 'Read more',
+                    url: 'http://rede.natura.net'+product.childSKUs[0].productUrl,
+                }),
+                image: new Image({
+                    url: 'http://rede.natura.net' + product.productImages[0].listingImageUrl,
+                    alt: product.friendlyName,
+                }),
+                display: 'CROPPED',
+            }));
+        }
+        return conv;
     }
 
     function buildSingleCards() {
@@ -236,6 +282,7 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
 
     function buildPromotionListResponse() {
         let responseToUser;
+        console.log('buildPromotionListResponse: '+ conv.data.productsFound.length)
         if (conv.data.productsFound.length === 0) {
             responseToUser = 'No products available at this time!';
             conv.close(responseToUser);
@@ -348,6 +395,7 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
     intentMap.set('promotions', listPromotions)
     intentMap.set('Search Products', listProducts)
     intentMap.set('promotions - select.number', selectedItemByNumber)
+    intentMap.set('Search Products - select.number', selectedItemByNumber)
     agent.handleRequest(intentMap);
 });
 
@@ -360,7 +408,7 @@ const requestMeetups = functions.https.onRequest((request, response) => {
 })
 
 const requestFinder = functions.https.onRequest((request, response) => {
-    response.send(service.searchProductsRequest('kaiak', 2))
+    response.send(service.searchProductsRequest('   ', 2))
 })
 
 module.exports = {
