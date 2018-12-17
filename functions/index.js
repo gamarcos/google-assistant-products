@@ -31,12 +31,12 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
         conv.data.meetupData = [];
     }
 
-    if (conv !== null && conv.data.productsFound === undefined) {
-        conv.data.productsFound = [];
+    if (conv !== null && conv.data.productsOnPromotions === undefined) {
+        conv.data.productsOnPromotions = [];
     }
 
-    if (conv !== null && conv.data.products === undefined) {
-        conv.data.products = [];
+    if (conv !== null && conv.data.productsSearch === undefined) {
+        conv.data.productsSearch = [];
     }
 
     if (conv !== null && conv.data.productsNumber === undefined) {
@@ -100,14 +100,14 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
     }
 
     async function getPromotionalProducts() {
-        if (conv.data.productsFound.length === 0) {
+        if (conv.data.productsOnPromotions.length === 0) {
             const data = await service.requestProducts();
-            saveProducts(data)
+            saveProductsInPromotions(data)
             console.log('Get Promotional True data' + data)
-            console.log('Get Promotional True' + conv.data.productsFound)
+            console.log('Get Promotional True' + conv.data.productsOnPromotions)
             return buildPromotionListResponse();
         } else {
-            console.log('Get Promotional False' + conv.data.productsFound)
+            console.log('Get Promotional False' + conv.data.productsOnPromotions)
             return buildPromotionListResponse();
         }
     }
@@ -116,12 +116,16 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
         let productName = agent.parameters['products']
         let page = 1
 
+        onv.data.productsSearch = []
+
         console.log('Get Products ' + productName, page)
-        if (conv.data.products.length === 0) {
+        console.log('Products in cache', conv.data.productsSearch.length)
+        if (conv.data.productsSearch.length === 0) {
             const products = await service.searchProductsRequest(productName, page)
-            saveProductsFound(products)
+            saveProductsSearch(products)
             console.log('Quantidade de PRodutos: ' + products.products.length)
             if (products.products.length === 1) {
+                conv.data.productsNumber = 0;
                 return buildSingleProduct()
             } else {
                 return buildProductsFound()
@@ -132,8 +136,22 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
         }
     }
 
-    async function selectedItemByNumber(agent) {
-        console.log('Produto Selecionado: ' + conv.data.productsNumber)
+    async function selectedItemSearch(agent) {
+        if (checkIfGoogle(agent)) {
+            console.log('Produto Selecionado: ' + conv.data.productsNumber)
+            let option = agent.contexts.find(function (obj) {
+                return obj.name === 'actions_intent_option'
+            })
+            if (option && option.hasOwnProperty('parameters') && option.parameters.hasOwnProperty('OPTION')) {
+                conv.data.productsNumber = parseInt(option.parameters.OPTION.replace('product ', ''));
+            }
+            console.log('Produto Selecionado: ' + conv.data.productsNumber)
+            let response = await buildSingleProduct();
+            agent.add(response);
+        }
+    }
+
+    async function selectedPromotionsItem(agent) {
         if (checkIfGoogle(agent)) {
             console.log('Produto Selecionado: ' + conv.data.productsNumber)
             let option = agent.contexts.find(function (obj) {
@@ -149,8 +167,8 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
     }
 
     async function displayCard() {
-        if (conv.data.productsFound.length === 0) {
-            await getMeetupData();
+        console.log("Display Cards", conv.data.productsOnPromotions)
+        if (conv.data.productsOnPromotions.length === 0) {
             return buildSingleCards();
         } else {
             return buildSingleCards();
@@ -158,13 +176,13 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
     }
 
     function buildSingleProduct() {
-        console.log('Single Card Products' + conv.data.products.products[0])
+        console.log('Single Card Products' + conv.data.productsSearch.products[parseInt(conv.data.productsNumber)])
         let responseToUser;
-        if (conv.data.products.products.length === 0 ) {
+        if (conv.data.productsSearch.products.length === 0 ) {
             responseToUser = 'No products on promotions available at this time!';
             conv.close(responseToUser)
         } 
-        let product = conv.data.products.products[0];
+        let product = conv.data.productsSearch.products[parseInt(conv.data.productsNumber)];
         responseToUser += ' Write or say next meetup to see more.';
 
         if ( hasAudio ) {
@@ -197,13 +215,13 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
     }
 
     function buildSingleCards() {
-        console.log('Single Card' +conv.data.productsFound[parseInt(conv.data.productsNumber)])
+        console.log('Single Card ' +conv.data.productsOnPromotions[parseInt(conv.data.productsNumber)])
         let responseToUser;
-        if (conv.data.productsFound.length === 0 ) {
+        if (conv.data.productsOnPromotions.length === 0 ) {
             responseToUser = 'No products on promotions available at this time!';
             conv.close(responseToUser)
         } 
-        let product = conv.data.productsFound[parseInt(conv.data.productsNumber)];
+        let product = conv.data.productsOnPromotions[parseInt(conv.data.productsNumber)];
         responseToUser += ' Write or say next meetup to see more.';
 
         if ( hasAudio ) {
@@ -239,7 +257,7 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
 
     function buildProductsFound() {
         let responseToUser;
-        if (conv.data.products.products.length === 0) {
+        if (conv.data.productsSearch.products.length === 0) {
             responseToUser = 'No products available at this time!';
             conv.close(responseToUser);
         } else {
@@ -248,8 +266,8 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                 'Please select one of them. <break time="1500ms" />';
 
             let items = {};
-            for (let i = 0; i < conv.data.products.products.length; i++) {
-                let product = conv.data.products.products[i];
+            for (let i = 0; i < conv.data.productsSearch.products.length; i++) {
+                let product = conv.data.productsSearch.products[i];
                 if (hasScreen) {
                     items[i] = {
                         title: product.friendlyName,
@@ -282,8 +300,8 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
 
     function buildPromotionListResponse() {
         let responseToUser;
-        console.log('buildPromotionListResponse: '+ conv.data.productsFound.length)
-        if (conv.data.productsFound.length === 0) {
+        console.log('buildPromotionListResponse: '+ conv.data.productsOnPromotions.length)
+        if (conv.data.productsOnPromotions.length === 0) {
             responseToUser = 'No products available at this time!';
             conv.close(responseToUser);
         } else {
@@ -292,8 +310,8 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                 'Please select one of them. <break time="1500ms" />';
 
             let items = {};
-            for (let i = 0; i < conv.data.productsFound.length; i++) {
-                let product = conv.data.productsFound[i];
+            for (let i = 0; i < conv.data.productsOnPromotions.length; i++) {
+                let product = conv.data.productsOnPromotions[i];
                 if (hasScreen) {
                     items[i] = {
                         title: product.name,
@@ -375,15 +393,15 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
         }
     }
 
-    function saveProducts(data) {
+    function saveProductsSearch(data) {
         if (conv !== null) {
-            conv.data.productsFound = data;
+            conv.data.productsSearch = data;
         }
     }
 
-    function saveProductsFound(data) {
+    function saveProductsInPromotions(data) {
         if (conv !== null) {
-            conv.data.products = data;
+            conv.data.productsOnPromotions = data;
         }
     }
 
@@ -394,8 +412,8 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
     intentMap.set('show meetups', listMeetups)
     intentMap.set('promotions', listPromotions)
     intentMap.set('Search Products', listProducts)
-    intentMap.set('promotions - select.number', selectedItemByNumber)
-    intentMap.set('Search Products - select.number', selectedItemByNumber)
+    intentMap.set('promotions - select.number', selectedPromotionsItem)
+    intentMap.set('Search Products - select.number', selectedItemSearch)
     agent.handleRequest(intentMap);
 });
 
