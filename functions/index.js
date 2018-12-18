@@ -75,6 +75,8 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
     async function listPromotions(agent) {
         if (checkIfGoogle(agent)) {
             let response = await getPromotionalProducts();
+            console.log(response)
+            console.log(agent)
             agent.add(response);
         }
     }
@@ -100,6 +102,8 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
     }
 
     async function getPromotionalProducts() {
+        conv.data.productsOnPromotions = []
+        
         if (conv.data.productsOnPromotions.length === 0) {
             const data = await service.requestProducts();
             saveProductsInPromotions(data)
@@ -116,7 +120,7 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
         let productName = agent.parameters['products']
         let page = 1
 
-        onv.data.productsSearch = []
+        conv.data.productsSearch = []
 
         console.log('Get Products ' + productName, page)
         console.log('Products in cache', conv.data.productsSearch.length)
@@ -176,16 +180,21 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
     }
 
     function buildSingleProduct() {
-        console.log('Single Card Products' + conv.data.productsSearch.products[parseInt(conv.data.productsNumber)])
+        console.log('Single Card Products Passo 1' + parseInt(conv.data.productsNumber))
         let responseToUser;
         if (conv.data.productsSearch.products.length === 0 ) {
+            console.log('Single Card Products Passo 2' + parseInt(conv.data.productsNumber))
             responseToUser = 'No products on promotions available at this time!';
             conv.close(responseToUser)
         } 
         let product = conv.data.productsSearch.products[parseInt(conv.data.productsNumber)];
         responseToUser += ' Write or say next meetup to see more.';
+        
+        console.log('Single Card Products Passo 3' + parseInt(conv.data.productsNumber))
 
         if ( hasAudio ) {
+            
+        console.log('Single Card Products Passo 4' + parseInt(conv.data.productsNumber))
             let ssmlText = '<speak>' +
                 ' Is ' + product.friendlyName + '. <break time="1" />' +
                 ' By ' + product.tagline + '. <break time="1" />' +
@@ -193,9 +202,13 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                 '</speak>';
             conv.ask(ssmlText.replace('&', ' and '));
         } else {
+            
+        console.log('Single Card Products Passo 5' + parseInt(conv.data.productsNumber))
             conv.ask(responseToUser);
         }
         if (hasScreen) {
+            
+        console.log('Single Card Products Passo 5' + parseInt(conv.data.productsNumber))
             conv.ask(new BasicCard({
                 text: product.tagline,
                 subtitle: 'This is a subtitle',
@@ -211,6 +224,8 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                 display: 'CROPPED',
             }));
         }
+        
+        console.log('Single Card Products Passo 7' + parseInt(conv.data.productsNumber))
         return conv;
     }
 
