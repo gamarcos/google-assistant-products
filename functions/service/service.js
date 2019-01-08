@@ -13,9 +13,9 @@ function searchProductsRequest(productName, position) {
       'Content-Type': 'application/json',
       'client_id': process.env.SEARCH_CLIENT_ID,
       'access_token': process.env.SEARCH_ACCESS_TOKEN,
-      'siteId': 'natura-site',
+      'siteId': process.env.SITE_ID,
       'hash': process.env.SEARCH_HASH,
-      'app-version': 'ANDROID-4.6.9(187)',
+      'app-version': process.env.APP_VERSION,
     },
     body: {
       request: {
@@ -44,9 +44,9 @@ function requestProducts() {
       'Content-Type': 'application/json',
       'client_id': process.env.SEARCH_CLIENT_ID,
       'access_token': process.env.SEARCH_ACCESS_TOKEN,
-      'siteId': 'natura-site',
+      'siteId': process.env.SITE_ID,
       'hash': process.env.SEARCH_HASH,
-      'app-version': 'ANDROID-4.6.9(187)',
+      'app-version': process.env.APP_VERSION,
       'sales_channel': 'ecommerce',
       '_dynSessConf': process.env.PROMOTION_DYN
     }

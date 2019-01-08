@@ -14,6 +14,8 @@ const { BasicCard, Button, Image, List } = require('actions-on-google');
 const admin = require("firebase-admin");
 const serviceAccount = require("./config/meetups-853ac-firebase-adminsdk-rrfy9-917874b229.json");
 
+const BASE_URL = 'http://rede.natura.net'
+
 process.env.DEBUG = 'dialogflow:debug'; // enables lib debugging statements
 
 admin.initializeApp({
@@ -206,10 +208,10 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                 title: product.friendlyName,
                 buttons: new Button({
                     title: 'Read more',
-                    url: 'http://rede.natura.net'+product.childSKUs[0].productUrl,
+                    url: BASE_URL+product.childSKUs[0].productUrl,
                 }),
                 image: new Image({
-                    url: 'http://rede.natura.net' + product.productImages[0].listingImageUrl,
+                    url: BASE_URL + product.productImages[0].listingImageUrl,
                     alt: product.friendlyName,
                 }),
                 display: 'CROPPED',
@@ -245,10 +247,10 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                 title: product.name,
                 buttons: new Button({
                     title: 'Read more',
-                    url: 'http://rede.natura.net'+product.productsVariants[0]._links.productUrl.href,
+                    url: BASE_URL+product.productsVariants[0]._links.productUrl.href,
                 }),
                 image: new Image({
-                    url: 'http://rede.natura.net' + product.productsVariants[0].media[0].url,
+                    url: BASE_URL + product.productsVariants[0].media[0].url,
                     alt: product.name,
                 }),
                 display: 'CROPPED',
@@ -276,7 +278,7 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                         title: product.friendlyName,
                         description: product.description,
                         image: new Image({
-                            url: 'http://rede.natura.net' + product.productImages[0].listingImageUrl,
+                            url: BASE_URL + product.productImages[0].listingImageUrl,
                             alt: product.friendlyName,
                         }),
                     }
@@ -320,7 +322,7 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                         title: product.name,
                         description: product.description,
                         image: new Image({
-                            url: 'http://rede.natura.net' + product.productsVariants[0].media[0].url,
+                            url: BASE_URL + product.productsVariants[0].media[0].url,
                             alt: product.name,
                         }),
                     }
