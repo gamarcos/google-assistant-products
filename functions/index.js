@@ -4,6 +4,7 @@
 
 const service = require('./service/service')
 const config = require('./config/config')
+const conversation = require('./utils/conversation')
 
 const functions = require('firebase-functions');
 const { WebhookClient } = require('dialogflow-fulfillment');
@@ -49,20 +50,19 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
     function checkIfGoogle(agent) {
         let isGoogle = true;
         if (conv === null) {
-            agent.add(`Only requests from Google Assistant are supported.
-        Find the XXX action on Google Assistant directory!`);
+            agent.add(conversation.REJECTION_ONLY_GOOGLE_REQUEST);
             isGoogle = false;
         }
         return isGoogle;
     }
 
     function welcome(agent) {
-        agent.add(`Hi nice to meet you! I'm Nat! I'm here to help you get the best deals and offers. How can I help you today?`);
+        agent.add(conversation.WELCOME_APPEARANCE);
     }
 
     function fallback(agent) {
-        agent.add(`I didn't understand`);
-        agent.add(`I'm sorry, can you try again?`)
+        agent.add(conversation.REJECTION_UNDERSTAND);
+        agent.add(conversation.REJECTION_TRY_AGAIN)
     }
 
     async function listMeetups(agent) {
@@ -180,21 +180,15 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
     }
 
     function buildSingleProduct() {
-        console.log('Single Card Products Passo 1' + parseInt(conv.data.productsNumber))
         let responseToUser;
         if (conv.data.productsSearch.products.length === 0 ) {
-            console.log('Single Card Products Passo 2' + parseInt(conv.data.productsNumber))
             responseToUser = 'No products on promotions available at this time!';
             conv.close(responseToUser)
         } 
         let product = conv.data.productsSearch.products[parseInt(conv.data.productsNumber)];
         responseToUser += ' Write or say next meetup to see more.';
         
-        console.log('Single Card Products Passo 3' + parseInt(conv.data.productsNumber))
-
         if ( hasAudio ) {
-            
-        console.log('Single Card Products Passo 4' + parseInt(conv.data.productsNumber))
             let ssmlText = '<speak>' +
                 ' Is ' + product.friendlyName + '. <break time="1" />' +
                 ' By ' + product.tagline + '. <break time="1" />' +
@@ -202,13 +196,10 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                 '</speak>';
             conv.ask(ssmlText.replace('&', ' and '));
         } else {
-            
-        console.log('Single Card Products Passo 5' + parseInt(conv.data.productsNumber))
             conv.ask(responseToUser);
         }
         if (hasScreen) {
-            
-        console.log('Single Card Products Passo 5' + parseInt(conv.data.productsNumber))
+
             conv.ask(new BasicCard({
                 text: product.tagline,
                 subtitle: 'This is a subtitle',
@@ -224,13 +215,10 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                 display: 'CROPPED',
             }));
         }
-        
-        console.log('Single Card Products Passo 7' + parseInt(conv.data.productsNumber))
         return conv;
     }
 
     function buildSingleCards() {
-        console.log('Single Card ' +conv.data.productsOnPromotions[parseInt(conv.data.productsNumber)])
         let responseToUser;
         if (conv.data.productsOnPromotions.length === 0 ) {
             responseToUser = 'No products on promotions available at this time!';
