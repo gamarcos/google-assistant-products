@@ -211,7 +211,7 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                     url: BASE_URL+product.childSKUs[0].productUrl,
                 }),
                 image: new Image({
-                    url: BASE_URL + product.productImages[0].listingImageUrl,
+                    url: BASE_URL+product.productImages[0].listingImageUrl,
                     alt: product.friendlyName,
                 }),
                 display: 'CROPPED',
@@ -250,7 +250,7 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                     url: BASE_URL+product.productsVariants[0]._links.productUrl.href,
                 }),
                 image: new Image({
-                    url: BASE_URL + product.productsVariants[0].media[0].url,
+                    url: BASE_URL+product.productsVariants[0].media[0].url,
                     alt: product.name,
                 }),
                 display: 'CROPPED',
@@ -271,14 +271,19 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                 'Please select one of them. <break time="1500ms" />';
 
             let items = {};
+            console.log("DEBUG CONV: ",conv.data.productsSearch.products.length)
+            console.log("DEBUG CONV LIST: ",conv.data.productsSearch.products)
             for (let i = 0; i < conv.data.productsSearch.products.length; i++) {
                 let product = conv.data.productsSearch.products[i];
+                console.log("DEBUG: ",BASE_URL+product.productImages[0])
+
                 if (hasScreen) {
                     items[i] = {
                         title: product.friendlyName,
                         description: product.description,
                         image: new Image({
-                            url: BASE_URL + product.productImages[0].listingImageUrl,
+                            
+                            url: BASE_URL+product.productImages[0].listingImageUrl,
                             alt: product.friendlyName,
                         }),
                     }
@@ -322,7 +327,7 @@ const dialogflowFirebaseFulfillment = functions.https.onRequest((request, respon
                         title: product.name,
                         description: product.description,
                         image: new Image({
-                            url: BASE_URL + product.productsVariants[0].media[0].url,
+                            url: BASE_URL+product.productsVariants[0].media[0].url,
                             alt: product.name,
                         }),
                     }
